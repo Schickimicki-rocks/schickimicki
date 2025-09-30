@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Impressum – Schicki Micki</title>
+  <meta name="description" content="Impressum nach § 5 DDG für die Website von Schicki Micki." />
+  <meta name="robots" content="index,follow" />
+  <style>
+    :root{
+      --bg:#0f0f0f; --fg:#fff; --muted:#b7b7bd; --card:#151515; --border:#2a2a2a;
+      --brand:#e91e63; --link:#e91e63; --shadow:0 6px 24px rgba(0,0,0,.35);
+    }
+    *{ box-sizing:border-box }
+    html{ color-scheme:dark }
+    body{ margin:0; font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+          background:var(--bg); color:var(--fg) }
+
+    .site-header{ position:sticky; top:0; z-index:10; background:rgba(15,15,15,.9);
+      backdrop-filter:saturate(140%) blur(6px); border-bottom:1px solid var(--border) }
+    .site-header .wrap{ max-width: 980px; margin:0 auto; padding:12px 20px; display:flex; gap:14px; align-items:center; justify-content:space-between }
+    .brand{ display:inline-flex; align-items:center; gap:10px; color:var(--fg); text-decoration:none; font-weight:700; letter-spacing:.2px }
+    .brand img{ width:28px; height:28px; display:block; background:#fff; border-radius:6px; padding:2px; box-shadow:var(--shadow) }
+    .topnav a{ color:var(--fg); text-decoration:none; margin-left:16px; opacity:.9 }
+    .topnav a:hover{ opacity:1; color:var(--link) }
+
+    header.pagehead, main, footer{ max-width: 850px; margin: 0 auto; padding: 24px; }
+    header.pagehead{ padding-top: 28px; }
+    h1{ font-size: clamp(28px, 3.5vw, 40px); line-height:1.15; margin: 6px 0 8px; }
+    .muted{ color:var(--muted) }
+    .card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px }
+    footer nav a{ margin-right:16px; color:#fff; text-decoration:none }
+    footer nav a:hover{ text-decoration:underline }
+  </style>
+</head>
+<body>
+  <div class="site-header" role="navigation" aria-label="Hauptnavigation">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="img/logo.svg" alt="" aria-hidden="true"><span>Schicki Micki</span></a>
+      <nav class="topnav">
+        <a href="/">Home</a>
+        <a href="/impressum.html" aria-current="page">Impressum</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+      </nav>
+    </div>
+  </div>
+
+  <header class="pagehead">
+    <h1>Impressum</h1>
+    <p class="muted">nach § 5 DDG · Stand: 25.09.2025</p>
+  </header>
+
+  <main>
+    <section class="card" aria-label="Diensteanbieter">
+      <h2>Diensteanbieter</h2>
+      <p>
+        Michael Müller<br>
+        Hinter der Alten Schule 3<br>
+        99098 Erfurt<br>
+        Deutschland
+      </p>
+      <p>E-Mail: <a href="mailto:contact@schickimicki.rocks">contact@schickimicki.rocks</a></p>
+      <p>Wirtschafts-Identifikationsnummer: DE455911673-00001</p>
+    </section>
+
+    <section aria-label="Verantwortlichkeit MStV" class="card">
+      <h2>Verantwortlich i. S. d. § 18 Abs. 2 MStV</h2>
+      <p>Nur erforderlich bei journalistisch-redaktionellen Inhalten. Für die aktuelle Künstlerseite nicht einschlägig.</p>
+    </section>
+
+    <section aria-label="Urheberrecht/Schlichtung">
+      <h2>Urheberrecht</h2>
+      <p>Inhalte dieser Website (Texte, Bilder, Audio/Video) unterliegen dem deutschen Urheberrecht. Verwertungen außerhalb der Grenzen des Urheberrechts bedürfen der Zustimmung der Rechteinhaber.</p>
+
+      <h2>Außergerichtliche Streitbeilegung</h2>
+      <p>Hinweis gemäß § 36 VSBG: Wir sind weder verpflichtet noch bereit, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+    </section>
+  </main>
+
+  <footer>
+    <nav aria-label="Seitennavigation">
+      <a href="/">Home</a>
+      <a href="/impressum.html" aria-current="page">Impressum</a>
+      <a href="/datenschutz.html">Datenschutz</a>
+    </nav>
+  </footer>
+</body>
+</html>
