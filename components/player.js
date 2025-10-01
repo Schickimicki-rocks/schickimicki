@@ -154,7 +154,13 @@ class SmartPlayer extends HTMLElement{
     this.shadowRoot.innerHTML = `
       <style>
         :host{ display:block; margin:2rem auto; max-width:720px; color:#fff; }
-        h2{ font:700 2rem/1.2 system-ui, Arial; margin:0 0 .75rem; text-align:center; }
+        h2{
+          /* deutlich kleiner und responsiv */
+          font: 700 clamp(1rem, 3.6vw, 1.35rem)/1.2 system-ui, Arial;
+          margin: 0 0 .5rem;
+          text-align: center;
+          letter-spacing: .01em;
+        }
         .tabs{ display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap; margin:.5rem 0 1rem; }
         .tab{ padding:.6rem 1rem; border-radius:999px; border:1px solid #555; background:transparent; color:#fff; cursor:pointer; }
         .tab.active[data-provider="soundcloud"] { background:#ff5500; border:0; }
@@ -180,6 +186,49 @@ class SmartPlayer extends HTMLElement{
         .smartlink small{ display:block; color:#aaa; margin-top:.35rem; }
         iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
         details{ color:#bbb; margin-top:.75rem; }
+
+        /* iPhone/kleine Viewports: Heading noch kompakter */
+        @media (max-width: 480px){
+          /* Hör rein kleiner */
+          h2{ font-size: clamp(.95rem, 3.2vw, 1.15rem); }
+
+          /* Smartlink-Button kompakter auf iPhone */
+          .smartlink a{
+            font-size: .95rem;
+            padding: .5rem .8rem;
+            gap: .4rem;
+            border-radius: 9px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.28);
+          }
+          .smartlink small{
+            font-size: .8rem;
+            line-height: 1.2;
+          }
+        }
+
+        @media (max-width: 360px){
+          /* noch kompakter auf sehr kleinen Viewports */
+          h2{ font-size: clamp(.9rem, 3.6vw, 1.05rem); }
+
+          .smartlink a{
+            font-size: .9rem;
+            padding: .45rem .7rem;
+            gap: .35rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 8px rgba(0,0,0,.25);
+          }
+          .smartlink small{
+            font-size: .75rem;
+          }
+        }
+
+        /* --- Schicki Micki: Tabs reduzieren auf 3 Plattformen (global) --- */
+        .tabs [data-provider="deezer"],
+        .tabs [data-provider="soundcloud"]{
+          display: none !important;
+        }
+        /* optional: Abstand der verbleibenden Buttons etwas luftiger */
+        .tabs{ gap: .65rem; }
       </style>
 
       <h2>🎧 Hör rein</h2>
@@ -193,7 +242,7 @@ class SmartPlayer extends HTMLElement{
 
       <div id="consent" class="consent" ${this.state.consented ? 'style="display:none;"' : ''}>
         <p style="margin:.25rem 0 1rem; color:#ddd;">
-          Zum Laden des Players brauchen wir dein OK – dabei werden Inhalte von Drittanbietern nachgeladen (Spotify/Apple/YouTube/Deezer/SoundCloud).
+          Zum Laden des Players brauchen wir dein OK – dabei werden Inhalte von Drittanbietern nachgeladen (Spotify/Apple/YouTube).
         </p>
         <button id="consentBtn">Einverstanden & Player laden</button>
       </div>
@@ -211,7 +260,7 @@ class SmartPlayer extends HTMLElement{
             aria-label="Alle Plattformen öffnen (Smart Link)">
             🎯 Alle Plattformen öffnen
           </a>
-          <small>Ein Link – Spotify, Apple, YouTube, Deezer & mehr.</small>
+          <small>Ein Link – Spotify, Apple, YouTube, Amazon & mehr.</small>
         </div>
       ` : ``}
 

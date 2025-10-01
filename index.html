@@ -40,9 +40,11 @@
       text-align: center;
       padding: 2rem;
     }
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
+    h1{
+      /* min, bevorzugt (viewport-abhängig), max */
+      font-size: clamp(1.5rem, 5.2vw, 2.4rem);
+      margin-bottom: .75rem;
+      line-height: 1.1;
     }
     p {
       margin-bottom: 2rem;
@@ -73,16 +75,40 @@
     }
     .hero{ position:relative; }
     .logo-chip{
-      position:absolute; top:12px; left:12px;
-      width:72px; height:auto;
-      background:#fff; padding:6px; border-radius:10px;
+      position:absolute; top:10px; left:10px;
+      width:56px; height:auto;        /* vorher 72px */
+      background:#fff; padding:5px;   /* etwas schlanker */
+      border-radius:10px;
       box-shadow:0 6px 24px rgba(0,0,0,.35);
       opacity:.98;
+    }
+    /* Phones und kleine Viewports */
+    @media (max-width: 480px){
+      .logo-chip{
+        width: 44px;         /* nochmal kleiner */
+        top: 8px; left: 8px;
+        padding: 4px;
+      }
+      /* Social-Icons einen Tick kleiner, damit alles luftiger wirkt */
+      :root{ --icon-size: 34px; }
+    }
+
+    /* sehr kleine Geräte/hohe Zoomstufen */
+    @media (max-width: 360px){
+      .logo-chip{ width: 38px; }
+      h1{ font-size: clamp(1.35rem, 6.2vw, 1.9rem); }
+      .hero-copy p{ font-size: clamp(.9rem, 3.6vw, 1rem); }
     }
     /* Optional: leichtes Overlay für Lesbarkeit von Text im Banner */
     .hero::after{
       content:""; position:absolute; inset:0; pointer-events:none;
       background:linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.35) 65%, rgba(0,0,0,.55));
+    }
+    .hero-copy p{
+      /* deutlich kleiner als das globale p */
+      font-size: clamp(.95rem, 2.8vw, 1.1rem);
+      line-height: 1.25;
+      margin-bottom: 1rem;
     }
 
     
