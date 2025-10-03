@@ -9,9 +9,16 @@ class SmartPlayer extends HTMLElement{
       // Bestehende
       spotifyArtistId: this.getAttribute('spotify-artist-id') || "",
       appleArtistId:   this.getAttribute('apple-artist-id')   || "",
+      appleAlbumId: this.getAttribute('apple-album-id') || "",
+      appleTrackId: this.getAttribute('apple-track-id') || "",
       appleStore:      this.getAttribute('apple-store')       || "de",
+      ytPoster: this.getAttribute('yt-poster') || "",
       ytPlaylistId:    this.getAttribute('yt-playlist-id')    || "",
       ytVideoId:       this.getAttribute('yt-video-id')       || "",
+      ytHeight: parseInt(this.getAttribute('yt-height') || '', 10) || 240, // px-Höhe für YouTube
+      ytAspect: (this.getAttribute('yt-aspect') || 'true') !== 'false', // 16:9 aktiv?
+      uniformTabs: this.hasAttribute('uniform-tabs'),                   // alle Tabs gleiche Höhe?
+      uniformHeight: parseInt(this.getAttribute('uniform-height') || '', 10) || null, // feste px (Option B)
 
       scUrl:           this.getAttribute('soundcloud-url')    || "",   // volle Track- oder Playlist-URL
       scVisual:        (this.getAttribute('sc-visual') || 'true') !== 'false', // großer Visual-Player?
@@ -64,27 +71,61 @@ class SmartPlayer extends HTMLElement{
         const qs = new URLSearchParams({ tracklist: this.cfg.deezerTracklist ? 'true' : 'false' });
         return `${base}?${qs.toString()}`;
       }
-      case 'youtube':
-        if(this.cfg.ytPlaylistId) return `https://www.youtube.com/embed/videoseries?list=${encodeURIComponent(this.cfg.ytPlaylistId)}`;
-        if(this.cfg.ytVideoId)    return `https://www.youtube.com/embed/${encodeURIComponent(this.cfg.ytVideoId)}?rel=0`;
+      case 'youtube': {
+        const base = (id) => `https://www.youtube-nocookie.com/embed/${id}`;
+        const params = new URLSearchParams({
+          rel: '0',               // keine kanal-fremden Vorschläge
+          modestbranding: '1',    // weniger YouTube-Branding
+          iv_load_policy: '3',    // keine Annotations
+          playsinline: '1',       // iOS: inline statt Vollbild
+          color: 'white'
+        });
+
+        if (this.cfg.ytPlaylistId) {
+          params.set('list', this.cfg.ytPlaylistId);
+          return `https://www.youtube-nocookie.com/embed/videoseries?${params.toString()}`;
+        }
+        if (this.cfg.ytVideoId) {
+          return `${base(encodeURIComponent(this.cfg.ytVideoId))}?${params.toString()}`;
+        }
         return "";
+      }
       case 'spotify':
         return this.cfg.spotifyArtistId ? `https://open.spotify.com/embed/artist/${this.cfg.spotifyArtistId}` : "";
       case 'apple':
-        return this.cfg.appleArtistId ? `https://embed.music.apple.com/${this.cfg.appleStore}/artist/${this.cfg.appleArtistId}` : "";
-      default: return "";
+        if (this.cfg.appleTrackId)
+          return `https://embed.music.apple.com/${this.cfg.appleStore}/song/${this.cfg.appleTrackId}`;
+        if (this.cfg.appleAlbumId)
+          return `https://embed.music.apple.com/${this.cfg.appleStore}/album/${this.cfg.appleAlbumId}`;
+        return this.cfg.appleArtistId
+          ? `https://embed.music.apple.com/${this.cfg.appleStore}/artist/${this.cfg.appleArtistId}`
+          : "";
     }
   }
 
+  getAspectHeight(){
+    const w = this.shadowRoot.host.getBoundingClientRect().width || 720;
+    return Math.round(w * 9 / 16); // 16:9
+  }
+
   frameHeight(name){
-    // sinnvolle Default-Höhen je Provider
-    if(name === 'soundcloud') return this.cfg.scVisual ? 420 : 166; // Visual groß vs. kompakt
-    if(name === 'deezer') {
-      if(this.cfg.deezerType === 'track') return 180;
-      return 300; // album/playlist/artist
+    // 1) Einheitliche Höhe erzwingen?
+    if (this.cfg.uniformTabs && this.cfg.uniformHeight) {
+      return this.cfg.uniformHeight; // z.B. 220
     }
-    if(name === 'youtube') return 360;
-    if(name === 'apple')   return 300;
+
+    // 2) Provider-spezifisch:
+    if (name === 'soundcloud') return this.cfg.scVisual ? 420 : 166;
+    if (name === 'deezer')     return (this.cfg.deezerType === 'track') ? 180 : 300;
+
+    if (name === 'youtube') {
+      return this.cfg.ytAspect ? this.getAspectHeight() : this.cfg.ytHeight;
+    }
+    if (name === 'apple') {
+      if (this.cfg.appleTrackId) return 180;
+      if (this.cfg.appleAlbumId) return 460;
+      return 300;
+    }
     return 152; // spotify kompakt
   }
 
@@ -148,6 +189,22 @@ class SmartPlayer extends HTMLElement{
       const l = document.createElement('link');
       l.rel = 'preconnect'; l.href = h; this.shadowRoot.appendChild(l);
     });
+    const poster = this.shadowRoot.getElementById('ytPoster');
+
+    consentBox.style.display = 'none';
+    wrap.style.display = 'block';
+    wrap.style.setProperty('--h', this.frameHeight(this.state.provider) + 'px');
+
+    if (this.state.provider === 'youtube' && this.cfg.ytPoster) {
+      // Poster zeigen, iFrame erst nach Klick laden
+      poster?.classList.remove('is-hidden');
+      frame.removeAttribute('src');
+      frame.style.pointerEvents = 'none';   // << iFrame kann nichts abfangen
+    } else {
+      poster?.classList.add('is-hidden');
+      frame.style.pointerEvents = 'auto';   // << wieder klickbar (für andere Provider)
+      frame.src = url || 'about:blank';
+    }
   }
 
   render(){
@@ -186,6 +243,30 @@ class SmartPlayer extends HTMLElement{
         .smartlink small{ display:block; color:#aaa; margin-top:.35rem; }
         iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
         details{ color:#bbb; margin-top:.75rem; }
+
+        .frame{ position:relative; width:100%; height:var(--h,360px); border-radius:16px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,.35); background:#111; }
+
+        /* iFrame standardmäßig unter dem Poster + klicksperre solange Poster sichtbar */
+        iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; z-index:1; }
+
+        /* Poster muss DRÜBER liegen, sonst fängt das iFrame die Klicks */
+        .poster{
+          position:absolute; inset:0; z-index:2;
+          display:flex; align-items:center; justify-content:center;
+          background:#000 center/contain no-repeat;
+        }
+        .poster.is-hidden{ display:none; }
+        .poster{
+          position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+          background:#000 center/contain no-repeat; /* zeigt dein Quadrat-Cover vollständig */
+        }
+        .poster .play{
+          width:64px; height:64px; border-radius:50%; border:0; cursor:pointer;
+          background:rgba(0,0,0,.6); color:#fff; display:grid; place-items:center;
+          box-shadow:0 6px 18px rgba(0,0,0,.35);
+        }
+        .poster .play svg{ width:26px; height:26px; }
+        .poster.is-hidden{ display:none; }
 
         /* iPhone/kleine Viewports: Heading noch kompakter */
         @media (max-width: 480px){
@@ -248,6 +329,15 @@ class SmartPlayer extends HTMLElement{
       </div>
 
       <div class="frame" style="--h:${this.frameHeight(this.state.provider)}px">
+
+        ${this.cfg.ytPoster ? `
+          <div id="ytPoster" class="poster" style="background-image:url('${this.cfg.ytPoster}')">
+            <button class="play" aria-label="Abspielen">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+          </div>
+        ` : ``}
+
         <iframe id="frame" title="Musik-Player"
           allow="autoplay; clipboard-write; encrypted-media; picture-in-picture"
           loading="lazy" decoding="async"></iframe>
@@ -283,6 +373,26 @@ class SmartPlayer extends HTMLElement{
     }
     this.hideUnavailableTabs();
     this.updateFrame();
+    window.addEventListener('resize', () => {
+      if (!this.state.consented) return;
+      if (this.cfg.uniformTabs || this.state.provider === 'youtube') {
+        const wrap = this.shadowRoot.querySelector('.frame');
+        if (wrap) wrap.style.setProperty('--h', this.frameHeight(this.state.provider) + 'px');
+      }
+    }, { passive:true });
+
+    const posterEl = this.shadowRoot.getElementById('ytPoster');
+    if (posterEl) {
+      posterEl.addEventListener('click', () => {
+        // YouTube mit Autoplay laden
+        const base = this.embedUrl('youtube') || '';
+        const autoplayUrl = base ? (base + (base.includes('?') ? '&' : '?') + 'autoplay=1') : '';
+        const frame = this.shadowRoot.getElementById('frame');
+        if (autoplayUrl && frame) frame.src = autoplayUrl;
+        frame.style.pointerEvents = 'auto';     // << iFrame wieder interaktiv
+        posterEl.classList.add('is-hidden');
+      });
+    }
   }
 }
 
