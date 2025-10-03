@@ -12,7 +12,6 @@ class SmartPlayer extends HTMLElement{
       appleAlbumId: this.getAttribute('apple-album-id') || "",
       appleTrackId: this.getAttribute('apple-track-id') || "",
       appleStore:      this.getAttribute('apple-store')       || "de",
-      ytPoster: this.getAttribute('yt-poster') || "",
       ytPlaylistId:    this.getAttribute('yt-playlist-id')    || "",
       ytVideoId:       this.getAttribute('yt-video-id')       || "",
       ytHeight: parseInt(this.getAttribute('yt-height') || '', 10) || 240, // px-Höhe für YouTube
@@ -166,13 +165,13 @@ class SmartPlayer extends HTMLElement{
     if(!this.state.consented){
       frame.removeAttribute('src');
       consentBox.style.display = 'block';
-      wrap.style.display = 'none';          // << NEU: Frame verstecken
+      wrap.style.display = 'none';
       return;
     }
 
     // ab hier: Consent erteilt
     consentBox.style.display = 'none';
-    wrap.style.display = 'block';            // << NEU: Frame wieder zeigen
+    wrap.style.display = 'block';
     wrap.style.setProperty('--h', this.frameHeight(this.state.provider) + 'px');
     const url = this.embedUrl(this.state.provider);
     frame.src = url || 'about:blank';
@@ -189,22 +188,6 @@ class SmartPlayer extends HTMLElement{
       const l = document.createElement('link');
       l.rel = 'preconnect'; l.href = h; this.shadowRoot.appendChild(l);
     });
-    const poster = this.shadowRoot.getElementById('ytPoster');
-
-    consentBox.style.display = 'none';
-    wrap.style.display = 'block';
-    wrap.style.setProperty('--h', this.frameHeight(this.state.provider) + 'px');
-
-    if (this.state.provider === 'youtube' && this.cfg.ytPoster) {
-      // Poster zeigen, iFrame erst nach Klick laden
-      poster?.classList.remove('is-hidden');
-      frame.removeAttribute('src');
-      frame.style.pointerEvents = 'none';   // << iFrame kann nichts abfangen
-    } else {
-      poster?.classList.add('is-hidden');
-      frame.style.pointerEvents = 'auto';   // << wieder klickbar (für andere Provider)
-      frame.src = url || 'about:blank';
-    }
   }
 
   render(){
@@ -243,30 +226,6 @@ class SmartPlayer extends HTMLElement{
         .smartlink small{ display:block; color:#aaa; margin-top:.35rem; }
         iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
         details{ color:#bbb; margin-top:.75rem; }
-
-        .frame{ position:relative; width:100%; height:var(--h,360px); border-radius:16px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,.35); background:#111; }
-
-        /* iFrame standardmäßig unter dem Poster + klicksperre solange Poster sichtbar */
-        iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; z-index:1; }
-
-        /* Poster muss DRÜBER liegen, sonst fängt das iFrame die Klicks */
-        .poster{
-          position:absolute; inset:0; z-index:2;
-          display:flex; align-items:center; justify-content:center;
-          background:#000 center/contain no-repeat;
-        }
-        .poster.is-hidden{ display:none; }
-        .poster{
-          position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-          background:#000 center/contain no-repeat; /* zeigt dein Quadrat-Cover vollständig */
-        }
-        .poster .play{
-          width:64px; height:64px; border-radius:50%; border:0; cursor:pointer;
-          background:rgba(0,0,0,.6); color:#fff; display:grid; place-items:center;
-          box-shadow:0 6px 18px rgba(0,0,0,.35);
-        }
-        .poster .play svg{ width:26px; height:26px; }
-        .poster.is-hidden{ display:none; }
 
         /* iPhone/kleine Viewports: Heading noch kompakter */
         @media (max-width: 480px){
@@ -329,15 +288,6 @@ class SmartPlayer extends HTMLElement{
       </div>
 
       <div class="frame" style="--h:${this.frameHeight(this.state.provider)}px">
-
-        ${this.cfg.ytPoster ? `
-          <div id="ytPoster" class="poster" style="background-image:url('${this.cfg.ytPoster}')">
-            <button class="play" aria-label="Abspielen">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-            </button>
-          </div>
-        ` : ``}
-
         <iframe id="frame" title="Musik-Player"
           allow="autoplay; clipboard-write; encrypted-media; picture-in-picture"
           loading="lazy" decoding="async"></iframe>
@@ -380,19 +330,6 @@ class SmartPlayer extends HTMLElement{
         if (wrap) wrap.style.setProperty('--h', this.frameHeight(this.state.provider) + 'px');
       }
     }, { passive:true });
-
-    const posterEl = this.shadowRoot.getElementById('ytPoster');
-    if (posterEl) {
-      posterEl.addEventListener('click', () => {
-        // YouTube mit Autoplay laden
-        const base = this.embedUrl('youtube') || '';
-        const autoplayUrl = base ? (base + (base.includes('?') ? '&' : '?') + 'autoplay=1') : '';
-        const frame = this.shadowRoot.getElementById('frame');
-        if (autoplayUrl && frame) frame.src = autoplayUrl;
-        frame.style.pointerEvents = 'auto';     // << iFrame wieder interaktiv
-        posterEl.classList.add('is-hidden');
-      });
-    }
   }
 }
 
